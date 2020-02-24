@@ -125,7 +125,7 @@ namespace WordConnect
 			if (scaleInfo != null)
 			{
 				// Set the size of this letter wheels RectTransform based on the size set in the ScaleInfo
-				RectT.sizeDelta = new Vector2(scaleInfo.rectTransformSize, scaleInfo.rectTransformSize);
+				RectT.sizeDelta = new Vector2(scaleInfo.rectTransformSize, scaleInfo.rectTransformSize);        //인스펙터에서 철자 갯수에 맞게 정의한 스케일로 사이즈를 맞춰준다.
 			}
 
 			CreateLetters(letters, packColor, scaleInfo);
