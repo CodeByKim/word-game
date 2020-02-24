@@ -61,7 +61,7 @@ namespace WordConnect
 		public int				Coins						{ get; private set; }
 		public int				NumLevelsTillAdShows		{ get; private set; }
 		public bool				PlayerSelectingHint			{ get; private set; }
-		public int				LastCompletedLevelNumber	{ get; private set; }
+		public int				LastCompletedLevelNumber	{ get; private set; }       //마지막에 플레이한 레벨
 
 		public bool DebugDisableLocking
 		{
@@ -104,10 +104,10 @@ namespace WordConnect
 			letterWheel.OnSelectedLettersUpdated	+= OnSelectedLettersUpdated;        //마우스를 아직 떼지 않은 상태로 하나의 알파엣을 추가해 나갈 때
 
 			// Create the LevelDatas and load all the level files in each category
-			CreateCategoryLevelDatas();     //핵심 메서드일듯...
+			CreateCategoryLevelDatas();     //텍스트파일로 이루어진 레벨파일을 팩, 카테고리에 따라 레벨 데이터로 생성
 
 			// Load the save file
-			if (!LoadSave())
+			if (!LoadSave())        //세이브된 파일이 있으면 로드한다. 없다면? 바로 아래 구문으로 들어온다.
 			{
 				// If no save file exists then set the starting values
 				Coins						= coinsToStart;
@@ -117,15 +117,15 @@ namespace WordConnect
 			CoinController.Instance.SetCoinsText(Coins);
 
 			// Loads the word file to be used to check for extra words
-			LoadWordFile();
+			LoadWordFile();     //엑스트라 워드파일을 로드한다 -> 엄청 큰 파일이라 쓰레드를 돌려서 엑스트라 워드 파일을 로드 함
 		}
 
 		private void Update()
 		{
-			if (loadExtraWordsWorker != null && loadExtraWordsWorker.Stopped)
+			if (loadExtraWordsWorker != null && loadExtraWordsWorker.Stopped)       //엑스트라 파일을 다 로드 했다면
 			{
-				allWords = loadExtraWordsWorker.allWords;
-				loadExtraWordsWorker = null;
+				allWords = loadExtraWordsWorker.allWords;       //읽은 엑스트라 단어를 가져오고
+				loadExtraWordsWorker = null;        //쓰레드 워커를 없앤다.
 			}
 		}
 
@@ -149,24 +149,26 @@ namespace WordConnect
         /// <summary>
         /// Creates a new current active level and starts it
         /// </summary>
-        public void StartLevel(int gameLevelNumber)     //만약 1레벨이 온다면?
+        public void StartLevel(int gameLevelNumber)     //설치 후 처음 플레이 한다면 1이 넘어 옮
 		{
-			for (int i = 0; i < packInfos.Count; i++)
+			for (int i = 0; i < packInfos.Count; i++)       //팩은 10개
 			{
-				PackInfo packInfo = PackInfos[i];
+				PackInfo packInfo = PackInfos[i];       //팩 하나 빼와서
 
-				for (int j = 0; j < packInfo.categoryInfos.Count; j++)
+				for (int j = 0; j < packInfo.categoryInfos.Count; j++)      //카테고리는 5개 정도
 				{
-					CategoryInfo categoryInfo = packInfo.categoryInfos[j];
+					CategoryInfo categoryInfo = packInfo.categoryInfos[j];      //카테고리 하나 빼오고
 
+                    //레벨 파일이 없거나, 모든 레벨을 순회하며 선택된 레벨의 게임레벨이 지금 하려는 레벨보다 작으면? -> 다음 레벨을 체크해야 함
 					if (categoryInfo.levelFiles.Count == 0 || categoryInfo.LevelDatas[categoryInfo.LevelDatas.Count - 1].GameLevelNumber < gameLevelNumber)
 					{
 						continue;
 					}
 
-					int levelIndex = gameLevelNumber - categoryInfo.LevelDatas[0].GameLevelNumber;
+                    //현재 시작 할 레벨을 찾은 것
+					int levelIndex = gameLevelNumber - categoryInfo.LevelDatas[0].GameLevelNumber;      //무조건 LevelDatas[0]의 레벨 넘버를 가져와서 현재 레벨에서 빼네? 해당 카테고리의 중단지점 부터 시작하려고 이런 작업을 함
 
-					StartLevel(packInfo, categoryInfo, categoryInfo.LevelDatas[levelIndex]);
+                    StartLevel(packInfo, categoryInfo, categoryInfo.LevelDatas[levelIndex]);
 
 					return;
 				}
@@ -176,43 +178,32 @@ namespace WordConnect
 		/// <summary>
 		/// Creates a new current active level and starts it
 		/// </summary>
-		public void StartLevel(PackInfo packInfo, CategoryInfo categoryInfo, int levelIndex)
-		{
-			if (levelIndex < categoryInfo.LevelDatas.Count)
-			{
-				StartLevel(packInfo, categoryInfo, categoryInfo.LevelDatas[levelIndex]);
-			}
-		}
-
-		/// <summary>
-		/// Creates a new current active level and starts it
-		/// </summary>
 		public void StartLevel(PackInfo packInfo, CategoryInfo categoryInfo, LevelData levelData)
 		{
-			ActiveLevel activeLevel = new ActiveLevel();
+			ActiveLevel activeLevel = new ActiveLevel();        //심플한 클래스, 그냥 데이터를 가지고 있는 구조체라고 보면 됨
 
 			activeLevel.packInfo		= packInfo;
 			activeLevel.categoryInfo	= categoryInfo;
 			activeLevel.levelData		= levelData;
-			activeLevel.levelSaveData	= GetLevelSaveData(levelData.Id);
+			activeLevel.levelSaveData	= GetLevelSaveData(levelData.Id);       //만약 제일 처음 시작했다면.. 세이브 데이터가 있을까? 없지
 
 			// If there is no save data then create a new LevelSaveData for this level
 			if (activeLevel.levelSaveData == null)
 			{
-				activeLevel.levelSaveData = new LevelSaveData(activeLevel.levelData);
+				activeLevel.levelSaveData = new LevelSaveData(activeLevel.levelData);       //제일 처음시작 했다면? 세이브 파일을 만들어 줌
 
 				// Set the new LevelSaveData in the dictionary so it is saved in the game save file
 				levelSaveDatas[activeLevel.levelData.Id] = activeLevel.levelSaveData;
 			}
 
 			// Check if we should show an ad
-			if (NumLevelsTillAdShows <= 0)
+			if (NumLevelsTillAdShows <= 0)      //만약 광고를 띄운다고 한다면.. 카운트가 0이 됬으니? 인터스티셜 띄워야겠지?
 			{
 				// Try and show an ad
-				if (MobileAdsManager.Instance.ShowInterstitialAd(null))
+				if (MobileAdsManager.Instance.ShowInterstitialAd(null))     //인터스티셜 띄우고 성공하면
 				{
 					// If an ad was successfully shown then reset the number of levels until an ad shows
-					NumLevelsTillAdShows = numLevelsTillAd;
+					NumLevelsTillAdShows = numLevelsTillAd;     //다시 인터스티셜 카운트 초기화 한다.
 				}
 			}
 
@@ -222,10 +213,55 @@ namespace WordConnect
 			StartLevel(activeLevel);
 		}
 
-		/// <summary>
-		/// SHows a hint in the current active level
+        /// <summary>
+		/// Starts a level
 		/// </summary>
-		public void ShowHint()
+		private void StartLevel(ActiveLevel level)      //진짜 레벨 스타트
+        {
+            CurrentActiveLevel = level;
+
+            switch (CurrentActiveLevel.levelData.LevelType)
+            {
+                case LevelData.Type.Grid:           //아래 List로 갈일은 없다.
+                    wordBoardGrid.Setup(CurrentActiveLevel);
+
+                    if (wordBoardList != null)
+                    {
+                        wordBoardList.Clear();
+                    }
+                    break;
+                case LevelData.Type.List:       //여긴 안 들어옴
+                    wordBoardList.Setup(CurrentActiveLevel);
+
+                    if (wordBoardGrid != null)
+                    {
+                        wordBoardGrid.Clear();
+                    }
+                    break;
+            }
+
+            extraWords.SetNumExtraWordsFound(CurrentActiveLevel.levelSaveData.extraWords);      //엑스트라워드에 찾은 엑스트라 단어 갯수를 셋팅한다.
+
+            letterWheel.Setup(CurrentActiveLevel);      //아래에 단어 선택판 셋업한다.
+
+            UIController.Instance.OnNewLevelStarted();
+        }
+
+        /// <summary>
+		/// Creates a new current active level and starts it
+		/// </summary>
+		public void StartLevel(PackInfo packInfo, CategoryInfo categoryInfo, int levelIndex)
+        {
+            if (levelIndex < categoryInfo.LevelDatas.Count)
+            {
+                StartLevel(packInfo, categoryInfo, categoryInfo.LevelDatas[levelIndex]);
+            }
+        }
+
+        /// <summary>
+        /// SHows a hint in the current active level
+        /// </summary>
+        public void ShowHint()
 		{
 			if (CurrentActiveLevel == null)
 			{
@@ -432,7 +468,7 @@ namespace WordConnect
 					CategoryInfo	categoryInfo		= packInfo.categoryInfos[j];
 					int				categoryLevelNumber	= 1;
 
-					categoryInfo.LevelDatas = new List<LevelData>();        //바로 아래에 나오는 levelFile과는 다르다.
+					categoryInfo.LevelDatas = new List<LevelData>();        //바로 아래에 나오는 levelFile과는 다르다. 아마 바로 밑의 레벨 파일을 분석해서 레벨 데이터를 만드는 듯 하다.
 
 					// Loop through all the levels in the category
 					for (int k = 0; k < categoryInfo.levelFiles.Count; k++)     //커테고리당 레벨 파일 갯수는 다르나.. 4개 정도
@@ -442,13 +478,13 @@ namespace WordConnect
 							Debug.Log("Null level file in category: " + categoryInfo.displayName);
 						}
 
-						LevelData levelData = new LevelData(categoryInfo.levelFiles[k].text);
+						LevelData levelData = new LevelData(categoryInfo.levelFiles[k].text);       //로드한 레벨 파일을 레벨 데이터로 만든다.
 
-						levelData.PackIndex		= i;
-						levelData.CategoryIndex	= j;
-						levelData.LevelIndex	= k;
+						levelData.PackIndex		= i;        //이 레벨이 몇번째 팩에 속해 있는가?
+						levelData.CategoryIndex	= j;        //이 레벨이 몇번째 카테고리에 속해 있는가?
+                        levelData.LevelIndex	= k;        //이 레벨이 몇번째 레벨인가?
 
-						levelData.GameLevelNumber		= gameLevelNumber++;
+                        levelData.GameLevelNumber		= gameLevelNumber++;
 						levelData.PackLevelNumber		= packLevelNumber++;
 						levelData.CategoryLevelNumber	= categoryLevelNumber++;
 
@@ -456,40 +492,6 @@ namespace WordConnect
 					}
 				}
 			}
-		}
-
-		/// <summary>
-		/// Starts a level
-		/// </summary>
-		private void StartLevel(ActiveLevel level)
-		{
-			CurrentActiveLevel = level;
-
-			switch (CurrentActiveLevel.levelData.LevelType)
-			{
-				case LevelData.Type.Grid:
-					wordBoardGrid.Setup(CurrentActiveLevel);
-
-					if (wordBoardList != null)
-					{
-						wordBoardList.Clear();
-					}
-					break;
-				case LevelData.Type.List:
-					wordBoardList.Setup(CurrentActiveLevel);
-
-					if (wordBoardGrid != null)
-					{
-						wordBoardGrid.Clear();
-					}
-					break;
-			}
-
-			extraWords.SetNumExtraWordsFound(CurrentActiveLevel.levelSaveData.extraWords);
-
-			letterWheel.Setup(CurrentActiveLevel);
-
-			UIController.Instance.OnNewLevelStarted();
 		}
 
 		/// <summary>
@@ -1315,9 +1317,10 @@ namespace WordConnect
 		{
 			loadExtraWordsWorker = new LoadExtraWordsWorker();
 
-			loadExtraWordsWorker.wordFileContents = wordFile.text;
+			loadExtraWordsWorker.wordFileContents = wordFile.text;      //wordFile은 엑스트라워드 파일이다.
 
-			new System.Threading.Thread(new System.Threading.ThreadStart(loadExtraWordsWorker.Run)).Start();
+            //쓰레드를 사용하는 이유는 뭘까?, 엄청 큰 파일 IO작업을 하느라 쓰레드를 돌리는것 같다.
+            new System.Threading.Thread(new System.Threading.ThreadStart(loadExtraWordsWorker.Run)).Start();
 		}
 
 		/// <summary>
@@ -1359,7 +1362,7 @@ namespace WordConnect
 		/// </summary>
 		private bool LoadSave()
 		{
-			levelSaveDatas = new Dictionary<string, LevelSaveData>();
+			levelSaveDatas = new Dictionary<string, LevelSaveData>();       //현재 레벨을 세이브하는 형식일 듯?
 
 			// Changed in 1.4 to use ISaveable instead, if SaveFilePath exists then we load it and delete it so the new save system is used next time
 			if (System.IO.File.Exists(SaveFilePath))
@@ -1372,21 +1375,21 @@ namespace WordConnect
 
 				return true;
 			}
-			else if (SaveManager.Exists())
-			{
-				JSONNode json = SaveManager.Instance.LoadSave(this);
+			else if (SaveManager.Exists())      //세이브가 존재한다면? (위의 if문은 지금 버전에서는 들어올 일이 없음)
+            {
+				JSONNode json = SaveManager.Instance.LoadSave(this);        //세이브된 파일을 로드해온다. 홈디자인에서는.. 레벨 중간을 세이브할 일은 없을 듯
 
 				if (json == null)
 				{
 					return false;
 				}
 
-				ParseSaveData(json);
+				ParseSaveData(json);        //로드한 데이터를 파싱
 
 				return true;
 			}
 
-			return false;
+			return false;       //만약 게임을 처음 시작했다면 세이브된 파일이 없었을 듯
 		}
 
 		private void ParseSaveData(JSONNode json)
