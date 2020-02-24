@@ -84,7 +84,7 @@ namespace WordConnect
 
 			if (OnWordSelected != null && !string.IsNullOrEmpty(selectedWord))
 			{
-				OnWordSelected(selectedWord);
+				OnWordSelected(selectedWord);                
 			}
 
 			ClearSelectedLetters();
@@ -110,8 +110,8 @@ namespace WordConnect
 
 		public void Setup(ActiveLevel level)
 		{
-			string	letters		= level.levelData.Letters;
-			Color	packColor	= level.packInfo.color;
+			string	letters		= level.levelData.Letters;      //letters를 캐릭터로 하나하나 쪼개서 휠의 일부로 만드는구나...
+            Color	packColor	= level.packInfo.color;
 
 			ResetLetterWheel();
 
@@ -119,7 +119,8 @@ namespace WordConnect
 			uiLine.color = packColor;
 
 			// Get the scale info
-			ScaleInfo scaleInfo = GetScaleInfo(letters.Length);
+			ScaleInfo scaleInfo = GetScaleInfo(letters.Length);     // ScaleInfo는 뭐냐면.. 예를 들어 단어 휠에 단어가 몇개가 나올지 모른다.
+            // 예를 들어 5개 나올수도있고, 6개가 나올 수도 있다. 알파벳이 휠에 더 많이 나올수록 각 알파벳의 크기는 작아져야 한다.
 
 			if (scaleInfo != null)
 			{

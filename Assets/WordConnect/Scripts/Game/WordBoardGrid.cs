@@ -37,9 +37,9 @@ namespace WordConnect
 		public override void Initialize()
 		{
 			cellPlacements	= new List<List<GameObject>>();
-			wordBoardCells	= new List<List<WordBoardCell>>();
+			wordBoardCells	= new List<List<WordBoardCell>>();  //2차원 셀 배열 생성
 
-			// Create a cell placement template GameObject to pass to the cellPlacementPool 
+			// Create a cell placement template GameObject to pass to the cellPlacementPool
 			Transform cellPlacementTemplate	= new GameObject("cell_template", typeof(RectTransform)).transform;
 			cellPlacementTemplate.SetParent(transform, false);
 
@@ -66,10 +66,10 @@ namespace WordConnect
 		{
 			Clear();
 
-			SetupGridGameObject(level.levelData);
-			CreateCellPlacements(level.levelData);
-			CreateWordGridCells(level);
-			ShowFoundWords(level);
+			SetupGridGameObject(level.levelData);       //그리드 레이아웃을 설정 함
+			CreateCellPlacements(level.levelData);      //그리드 셀의 홀더를 만들고?
+			CreateWordGridCells(level);     //그리드 셀을 만들고?
+			ShowFoundWords(level);      //이미 찾은 단어는 보여준다
 		}
 
 		/// <summary>
@@ -116,12 +116,12 @@ namespace WordConnect
 		/// </summary>
 		private void SetupGridGameObject(LevelData levelData)
 		{
-			int		rows	= levelData.BoardRows;
-			int		cols	= levelData.BoardCols;
-			float	height	= RectT.rect.height - (float)(rows - 1) * cellSpacing;
-			float	width	= RectT.rect.width - (float)(cols - 1) * cellSpacing;
+			int		rows	= levelData.BoardRows;      //로우와
+			int		cols	= levelData.BoardCols;      //컬럼을 읽어오고
+			float	height	= RectT.rect.height - (float)(rows - 1) * cellSpacing;      //각 그리드의 세로와
+			float	width	= RectT.rect.width - (float)(cols - 1) * cellSpacing;       //각 그리드의 가로를 계산한다.
 
-			gridCellSize = Mathf.Min(maxCellSize, height / (float)rows, width / (float)cols);
+            gridCellSize = Mathf.Min(maxCellSize, height / (float)rows, width / (float)cols);
 
 			GridLayoutGroup	gridLayoutGroup = boardContainer.GetComponent<GridLayoutGroup>();
 			gridLayoutGroup.constraint		= GridLayoutGroup.Constraint.FixedColumnCount;
@@ -135,6 +135,7 @@ namespace WordConnect
 		/// </summary>
 		private void CreateCellPlacements(LevelData levelData)
 		{
+            //WordGridCell의 부모 역할을 할 GameObjects를 만듬
 			for (int i = 0; i < levelData.BoardRows; i++)
 			{
 				List<GameObject> row = new List<GameObject>();
@@ -155,13 +156,13 @@ namespace WordConnect
 		/// </summary>
 		private void CreateWordGridCells(ActiveLevel level)
 		{
-			CreateEmptyWordGridCellsList(level.levelData);
+			CreateEmptyWordGridCellsList(level.levelData);      //빈 셀을 만든다?
 
-			for (int i = 0; i < level.levelData.Words.Count; i++)
+			for (int i = 0; i < level.levelData.Words.Count; i++)       //단어의 갯수만큼 루프
 			{
-				WordData wordData = level.levelData.Words[i];
+				WordData wordData = level.levelData.Words[i];       //단어를 하나 꺼내서
 
-				CreateWordGridCells(level, wordData);
+				CreateWordGridCells(level, wordData);       //단어 셀을 만든다.
 			}
 		}
 
@@ -176,7 +177,7 @@ namespace WordConnect
 
 				for (int j = 0; j < levelData.BoardCols; j++)
 				{
-					row.Add(null);
+					row.Add(null);      //그냥 널을 넣으면.. 빈 셀이 되는구만...
 				}
 
 				wordBoardCells.Add(row);

@@ -242,7 +242,7 @@ namespace WordConnect
 
             extraWords.SetNumExtraWordsFound(CurrentActiveLevel.levelSaveData.extraWords);      //엑스트라워드에 찾은 엑스트라 단어 갯수를 셋팅한다.
 
-            letterWheel.Setup(CurrentActiveLevel);      //아래에 단어 선택판 셋업한다.
+            letterWheel.Setup(CurrentActiveLevel);      //아래에 단어 선택판을 셋업한다.
 
             UIController.Instance.OnNewLevelStarted();
         }

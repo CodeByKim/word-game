@@ -90,7 +90,7 @@ namespace WordConnect
 				WordData wordData = level.levelData.Words[i];
 
 				// If the word has been found then show it
-				if (level.levelSaveData.foundWords.Contains(wordData.Word))
+				if (level.levelSaveData.foundWords.Contains(wordData.Word))     //이전에 찾은 단어가 있다면? 보여준다.
 				{
 					ShowWord(wordData, false, false);
 				}
