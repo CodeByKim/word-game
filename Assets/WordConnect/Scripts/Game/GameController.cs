@@ -88,8 +88,8 @@ namespace WordConnect
 			// Initialie the word boards
 			if (wordBoardGrid != null)
 			{
-				wordBoardGrid.Initialize();
-				wordBoardGrid.OnWordBoardCellClicked += OnWordGridCellClicked;
+				wordBoardGrid.Initialize();     //그리드로 게임보드를 짠다, 아직 제대로 배치는 안함 배치 할 준비만 하지
+				wordBoardGrid.OnWordBoardCellClicked += OnWordGridCellClicked;      //그리드의 각 셀을 클릭했을 때 호출되는 콜백함수
 			}
 
 			if (wordBoardList != null)
@@ -98,13 +98,13 @@ namespace WordConnect
 				wordBoardList.OnWordBoardCellClicked += OnWordGridCellClicked;
 			}
 
-			letterWheel.Initialize();
+			letterWheel.Initialize();       //화면 하단의 단어 맞추는 휠 기본 초기화
 
-			letterWheel.OnWordSelected				+= OnWordSelected;
-			letterWheel.OnSelectedLettersUpdated	+= OnSelectedLettersUpdated;
+			letterWheel.OnWordSelected				+= OnWordSelected;      //마우스로 드래그 해서 하나의 단어를 만들었을 때
+			letterWheel.OnSelectedLettersUpdated	+= OnSelectedLettersUpdated;        //마우스를 아직 떼지 않은 상태로 하나의 알파엣을 추가해 나갈 때
 
 			// Create the LevelDatas and load all the level files in each category
-			CreateCategoryLevelDatas();
+			CreateCategoryLevelDatas();     //핵심 메서드일듯...
 
 			// Load the save file
 			if (!LoadSave())
@@ -138,18 +138,18 @@ namespace WordConnect
 		{
 			if (pause)
 			{
-				Save();
+                Save();
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		/// <summary>
-		/// Creates a new current active level and starts it
-		/// </summary>
-		public void StartLevel(int gameLevelNumber)
+        /// <summary>
+        /// Creates a new current active level and starts it
+        /// </summary>
+        public void StartLevel(int gameLevelNumber)     //만약 1레벨이 온다면?
 		{
 			for (int i = 0; i < packInfos.Count; i++)
 			{
@@ -421,21 +421,21 @@ namespace WordConnect
 			int	gameLevelNumber	= 1;
 
 			// Loop through all the packs
-			for (int i = 0; i < PackInfos.Count; i++)
+			for (int i = 0; i < PackInfos.Count; i++)       //기본적으로 10개의 팩
 			{
 				PackInfo	packInfo		= PackInfos[i];
 				int			packLevelNumber	= 1;
 
 				// Loop through all the categoies in the pack
-				for (int j = 0; j < packInfo.categoryInfos.Count; j++)
+				for (int j = 0; j < packInfo.categoryInfos.Count; j++)      //팩 별로 카테고리 갯수는 5개
 				{
 					CategoryInfo	categoryInfo		= packInfo.categoryInfos[j];
 					int				categoryLevelNumber	= 1;
 
-					categoryInfo.LevelDatas = new List<LevelData>();
+					categoryInfo.LevelDatas = new List<LevelData>();        //바로 아래에 나오는 levelFile과는 다르다.
 
 					// Loop through all the levels in the category
-					for (int k = 0; k < categoryInfo.levelFiles.Count; k++)
+					for (int k = 0; k < categoryInfo.levelFiles.Count; k++)     //커테고리당 레벨 파일 갯수는 다르나.. 4개 정도
 					{
 						if (categoryInfo.levelFiles[k] == null)
 						{
